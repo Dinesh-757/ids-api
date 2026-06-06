@@ -22,17 +22,21 @@ def features():
         "features": FEATURES
     })
 
-@app.route("/predict", methods=["POST"])
-def predict():
+@app.route("/predict_csv", methods=["POST"])
+def predict_csv():
 
-    data = request.json
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-    df = pd.DataFrame([data])
+    file = request.files["file"]
 
-    prediction = model.predict(df)[0]
+    df = pd.read_csv(file)
+
+    predictions = model.predict(df)
 
     return jsonify({
-        "prediction": str(prediction)
+        "total_records": len(predictions),
+        "predictions": predictions.tolist()
     })
 
 if __name__ == "__main__":

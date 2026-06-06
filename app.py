@@ -6,9 +6,21 @@ app = Flask(__name__)
 
 model = joblib.load("ids_model.pkl")
 
+try:
+    FEATURES = list(model.feature_names_in_)
+except:
+    FEATURES = []
+
 @app.route("/")
 def home():
     return "IDS Prediction API is running"
+
+@app.route("/features")
+def features():
+    return jsonify({
+        "feature_count": len(FEATURES),
+        "features": FEATURES
+    })
 
 @app.route("/predict", methods=["POST"])
 def predict():

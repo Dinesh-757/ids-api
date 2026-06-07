@@ -34,6 +34,10 @@ def predict_csv():
 
     df = pd.read_csv(file)
 
+    # Remove Label column if present
+    if "Label" in df.columns:
+        df = df.drop(columns=["Label"])
+
     predictions = model.predict(df)
 
     return jsonify({

@@ -11,7 +11,7 @@ model = joblib.load("ids_model.pkl")
 
 try:
     FEATURES = list(model.feature_names_in_)
-except:
+except Exception:
     FEATURES = []
 
 @app.route("/")
@@ -21,41 +21,49 @@ def home():
 @app.route("/features")
 def features():
     return jsonify({
-"feature_count": len(FEATURES),
-"features": FEATURES
-})
+        "feature_count": len(FEATURES),
+        "features": FEATURES
+    })
 
 @app.route("/predict_csv", methods=["POST"])
 def predict_csv():
 
-if "file" not in request.files:
-    return jsonify({"error": "No file uploaded"}), 400
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-try:
-    file = request.files["file"]
+    try:
+        file = request.files["file"]
+        df = pd.read_csv(file)
 
-    df = pd.read_csv(file)
+        if "Label" in df.columns:
+            df = df.drop(columns=["Label"])
 
-    if "Label" in df.columns:
-        df = df.drop(columns=["Label"])
+        if FEATURES:
+            missing = [col for col in FEATURES if col not in df.columns]
 
-    if FEATURES:
-        df = df[FEATURES]
+            if missing:
+                return jsonify({
+                    "error": "Missing required columns",
+                    "missing_columns": missing
+                }), 400
 
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df.fillna(0, inplace=True)
-    df = df.clip(-1e9, 1e9)
+            df = df[FEATURES]
 
-    predictions = model.predict(df)
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        df.fillna(0, inplace=True)
+        df = df.clip(-1e9, 1e9)
 
-    return jsonify({
-        "total_records": len(predictions),
-        "predictions": predictions.tolist()
-    })
+        predictions = model.predict(df)
 
-except Exception as e:
-    return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "total_records": len(predictions),
+            "predictions": predictions.tolist()
+        })
 
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

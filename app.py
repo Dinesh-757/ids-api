@@ -35,9 +35,11 @@ def predict_csv():
         file = request.files["file"]
         df = pd.read_csv(file)
 
+        # Remove Label column if present
         if "Label" in df.columns:
             df = df.drop(columns=["Label"])
 
+        # Check required features
         if FEATURES:
             missing = [col for col in FEATURES if col not in df.columns]
 
@@ -49,19 +51,17 @@ def predict_csv():
 
             df = df[FEATURES]
 
+        # Clean data
         df.replace([np.inf, -np.inf], np.nan, inplace=True)
         df.fillna(0, inplace=True)
         df = df.clip(-1e9, 1e9)
 
-predictions = model.predict(df)
+        predictions = model.predict(df)
 
-unique, counts = np.unique(predictions, return_counts=True)
-
-return jsonify({
-    "total_records": len(predictions),
-    "predictions": predictions.tolist(),
-    "distribution": dict(zip(unique.astype(str), counts.astype(int)))
-})
+        return jsonify({
+            "total_records": len(predictions),
+            "predictions": predictions.tolist()
+        })
 
     except Exception as e:
         return jsonify({

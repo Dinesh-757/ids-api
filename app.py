@@ -16,11 +16,11 @@ except:
 
 @app.route("/")
 def home():
-return "IDS Prediction API is running"
+    return "IDS Prediction API is running"
 
 @app.route("/features")
 def features():
-return jsonify({
+    return jsonify({
 "feature_count": len(FEATURES),
 "features": FEATURES
 })
@@ -28,7 +28,6 @@ return jsonify({
 @app.route("/predict_csv", methods=["POST"])
 def predict_csv():
 
-```
 if "file" not in request.files:
     return jsonify({"error": "No file uploaded"}), 400
 
@@ -56,7 +55,7 @@ try:
 
 except Exception as e:
     return jsonify({"error": str(e)}), 500
-```
+
 
 if __name__ == "__main__":
     app.run(debug=True)

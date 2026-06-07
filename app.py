@@ -53,12 +53,15 @@ def predict_csv():
         df.fillna(0, inplace=True)
         df = df.clip(-1e9, 1e9)
 
-        predictions = model.predict(df)
+predictions = model.predict(df)
 
-        return jsonify({
-            "total_records": len(predictions),
-            "predictions": predictions.tolist()
-        })
+unique, counts = np.unique(predictions, return_counts=True)
+
+return jsonify({
+    "total_records": len(predictions),
+    "predictions": predictions.tolist(),
+    "distribution": dict(zip(unique.astype(str), counts.astype(int)))
+})
 
     except Exception as e:
         return jsonify({

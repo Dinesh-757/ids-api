@@ -10,9 +10,9 @@ CORS(app)
 model = joblib.load("ids_model.pkl")
 
 try:
-FEATURES = list(model.feature_names_in_)
+    FEATURES = list(model.feature_names_in_)
 except:
-FEATURES = []
+    FEATURES = []
 
 @app.route("/")
 def home():
@@ -58,5 +58,5 @@ except Exception as e:
     return jsonify({"error": str(e)}), 500
 ```
 
-if **name** == "**main**":
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)

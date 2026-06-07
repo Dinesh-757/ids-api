@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
+ffrom flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
 import numpy as np
 
-app = Flask(__name__)
+app = Flask(**name**)
 CORS(app)
 
 model = joblib.load("ids_model.pkl")
@@ -37,27 +37,14 @@ try:
 
     df = pd.read_csv(file)
 
-    # Remove Label column if present
     if "Label" in df.columns:
         df = df.drop(columns=["Label"])
 
-    # Keep only training features
     if FEATURES:
-        missing = [col for col in FEATURES if col not in df.columns]
-
-        if missing:
-            return jsonify({
-                "error": "Missing required columns",
-                "missing_columns": missing
-            }), 400
-
         df = df[FEATURES]
 
-    # Clean problematic values
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.fillna(0, inplace=True)
-
-    # Prevent extremely large values
     df = df.clip(-1e9, 1e9)
 
     predictions = model.predict(df)
@@ -68,10 +55,9 @@ try:
     })
 
 except Exception as e:
-    return jsonify({
-        "error": str(e)
-    }), 500
+    return jsonify({"error": str(e)}), 500
 ```
 
 if **name** == "**main**":
 app.run(debug=True)
+

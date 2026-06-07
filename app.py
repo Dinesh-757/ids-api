@@ -2,57 +2,56 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
-
-app = Flask(__name__)
-CORS(app)
-
-model = joblib.load("ids_model.pkl")
-
-try:
-    FEATURES = list(model.feature_names_in_)
-except:
-    FEATURES = []
-
-@app.route("/")
-def home():
-    return "IDS Prediction API is running"
-
-@app.route("/features")
-def features():
-    return jsonify({
-        "feature_count": len(FEATURES),
-        "features": FEATURES
-    })
-
+import numpy as np.0", port=10000)
 @app.route("/predict_csv", methods=["POST"])
 def predict_csv():
 
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
-    file = request.files["file"]
+    try:
+        import numpy as np
 
-    df = pd.read_csv(file)
+        file = request.files["file"]
 
-    if "Label" in df.columns:
-        df = df.drop(columns=["Label"])
+        df = pd.read_csv(file)
 
-    missing = [col for col in FEATURES if col not in df.columns]
+        # Remove Label column if present
+        if "Label" in df.columns:
+            df = df.drop(columns=["Label"])
 
-    if missing:
+        # Match the exact features used during training
+        if FEATURES:
+            missing = [col for col in FEATURES if col not in df.columns]
+
+            if missing:
+                return jsonify({
+                    "error": "Missing required columns",
+                    "missing_columns": missing
+                }), 400
+
+            df = df[FEATURES]
+
+        # Replace Infinity values
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        # Replace NaN values
+        df.fillna(0, inplace=True)
+
+        # Limit extremely large values
+        df = df.clip(-1e9, 1e9)
+
+        # Convert to float32
+        df = df.astype("float32")
+
+        predictions = model.predict(df)
+
         return jsonify({
-            "error": "Missing required features",
-            "missing_columns": missing
-        }), 400
+            "total_records": len(predictions),
+            "predictions": predictions.tolist()
+        })
 
-    df = df[FEATURES]
-
-    predictions = model.predict(df)
-
-    return jsonify({
-        "total_records": len(predictions),
-        "predictions": predictions.tolist()
-    })
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500

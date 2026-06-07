@@ -4,7 +4,7 @@ import joblib
 import pandas as pd
 import numpy as np
 
-app = Flask(**name**)
+app = Flask(__name__)
 CORS(app)
 
 model = joblib.load("ids_model.pkl")

@@ -56,20 +56,22 @@ def predict_csv():
         df.fillna(0, inplace=True)
         df = df.clip(-1e9, 1e9)
 
-predictions = model.predict(df)
+        # Predict
+        predictions = model.predict(df)
 
-unique, counts = np.unique(predictions, return_counts=True)
+        # Distribution
+        unique, counts = np.unique(predictions, return_counts=True)
 
-distribution = {
-    str(k): int(v)
-    for k, v in zip(unique, counts)
-}
+        distribution = {
+            str(k): int(v)
+            for k, v in zip(unique, counts)
+        }
 
-return jsonify({
-    "total_records": len(predictions),
-    "distribution": distribution,
-    "predictions": predictions.tolist()
-})
+        return jsonify({
+            "total_records": len(predictions),
+            "distribution": distribution,
+            "predictions": predictions.tolist()
+        })
 
     except Exception as e:
         return jsonify({
